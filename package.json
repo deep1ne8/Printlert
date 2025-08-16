@@ -1,0 +1,45 @@
+{
+  "name": "printlert",
+  "version": "1.0.0",
+  "description": "A sophisticated, browser-based printer supply monitoring portal with SNMP capabilities and real-time alerts",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "npx http-server -p 8000",
+    "dev": "npx live-server --port=8000"
+  },
+  "keywords": [
+    "printer",
+    "monitoring",
+    "snmp",
+    "toner",
+    "supply",
+    "dashboard",
+    "alerts",
+    "network",
+    "management",
+    "web-app"
+  ],
+  "author": "Printlert Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/printlert.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/printlert/issues"
+  },
+  "homepage": "https://github.com/yourusername/printlert#readme",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "printers": [
+    {
+      "id": "demo-hp-1",
+      "name": "HP LaserJet Pro M404n",
+      "ip": "192.168.1.100",
+      "community": "public",
+      "model": "hp",
+      "status": "online",
+      "isOnline": true,
+      "supplies": [
+        {
+          "name": "Black Toner",
+          "level": 85,
+          "maxLevel": 100,
+          "percentage": 85,
+          "status": "healthy"
+        }
+      ],
+      "lastScan": "2024-01-15T10:30:00.000Z",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "demo-canon-1",
+      "name": "Canon imageRUNNER ADVANCE C3530",
+      "ip": "192.168.1.101",
+      "community": "public",
+      "model": "canon",
+      "status": "online",
+      "isOnline": true,
+      "supplies": [
+        {
+          "name": "Black Toner",
+          "level": 92,
+          "maxLevel": 100,
+          "percentage": 92,
+          "status": "healthy"
+        },
+        {
+          "name": "Cyan Toner",
+          "level": 78,
+          "maxLevel": 100,
+          "percentage": 78,
+          "status": "healthy"
+        },
+        {
+          "name": "Magenta Toner",
+          "level": 65,
+          "maxLevel": 100,
+          "percentage": 65,
+          "status": "healthy"
+        },
+        {
+          "name": "Yellow Toner",
+          "level": 55,
+          "maxLevel": 100,
+          "percentage": 55,
+          "status": "healthy"
+        }
+      ],
+      "lastScan": "2024-01-15T10:30:00.000Z",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "demo-epson-1",
+      "name": "Epson WorkForce Pro WF-4740",
+      "ip": "192.168.1.102",
+      "community": "public",
+      "model": "epson",
+      "status": "online",
+      "isOnline": true,
+      "supplies": [
+        {
+          "name": "Black Ink",
+          "level": 45,
+          "maxLevel": 100,
+          "percentage": 45,
+          "status": "healthy"
+        },
+        {
+          "name": "Cyan Ink",
+          "level": 15,
+          "maxLevel": 100,
+          "percentage": 15,
+          "status": "warning"
+        },
+        {
+          "name": "Magenta Ink",
+          "level": 8,
+          "maxLevel": 100,
+          "percentage": 8,
+          "status": "critical"
+        },
+        {
+          "name": "Yellow Ink",
+          "level": 25,
+          "maxLevel": 100,
+          "percentage": 25,
+          "status": "healthy"
+        }
+      ],
+      "lastScan": "2024-01-15T10:30:00.000Z",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "demo-brother-1",
+      "name": "Brother HL-L3270CDW",
+      "ip": "192.168.1.103",
+      "community": "public",
+      "model": "brother",
+      "status": "offline",
+      "isOnline": false,
+      "supplies": [],
+      "lastScan": "2024-01-15T10:30:00.000Z",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "error": "SNMP timeout - printer not responding"
+    }
+  ],
+  "settings": {
+    "lowThreshold": 20,
+    "criticalThreshold": 10,
+    "scanInterval": 300,
+    "timeout": 3000
+  },
+  "alerts": [
+    {
+      "id": 1705312200000,
+      "type": "critical",
+      "title": "Critical: Magenta Ink low on Epson WorkForce Pro WF-4740",
+      "message": "Magenta Ink is at 8% - Immediate attention required",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "acknowledged": false
+    },
+    {
+      "id": 1705312200001,
+      "type": "warning",
+      "title": "Warning: Cyan Ink running low on Epson WorkForce Pro WF-4740",
+      "message": "Cyan Ink is at 15% - Consider ordering replacement",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "acknowledged": false
+    },
+    {
+      "id": 1705312200002,
+      "type": "error",
+      "title": "Brother HL-L3270CDW is offline",
+      "message": "Printer at 192.168.1.103 is not responding to SNMP requests",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "acknowledged": true
+    }
+  ],
+  "oidConfigurations": {
+    "generic": {
+      "name": "Generic Printer",
+      "oids": {
+        "systemName": "1.3.6.1.2.1.25.3.2.1.3.1",
+        "systemDescription": "1.3.6.1.2.1.1.1.0",
+        "blackTonerLevel": "1.3.6.1.2.1.43.10.2.1.4.1.1",
+        "blackTonerMaxLevel": "1.3.6.1.2.1.43.10.2.1.5.1.1",
+        "cyanTonerLevel": "1.3.6.1.2.1.43.10.2.1.4.1.2",
+        "cyanTonerMaxLevel": "1.3.6.1.2.1.43.10.2.1.5.1.2",
+        "magentaTonerLevel": "1.3.6.1.2.1.43.10.2.1.4.1.3",
+        "magentaTonerMaxLevel": "1.3.6.1.2.1.43.10.2.1.5.1.3",
+        "yellowTonerLevel": "1.3.6.1.2.1.43.10.2.1.4.1.4",
+        "yellowTonerMaxLevel": "1.3.6.1.2.1.43.10.2.1.5.1.4",
+        "totalPrints": "1.3.6.1.2.1.43.10.2.1.4.1.1",
+        "printerStatus": "1.3.6.1.2.1.25.3.5.1.1.1"
+      }
+    }
+  }
+}

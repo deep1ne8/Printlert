@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printlert - Printer Supply Monitor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-print"></i> Printlert</h1>
+                <p>Supply Monitor</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#printers" class="nav-item" data-section="printers">
+                    <i class="fas fa-print"></i>
+                    <span>Printers</span>
+                </a>
+                <a href="#alerts" class="nav-item" data-section="alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                    <span class="alert-badge" id="alertCount">0</span>
+                </a>
+                <a href="#settings" class="nav-item" data-section="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button id="scanBtn" class="scan-btn">
+                    <i class="fas fa-search"></i>
+                    Scan Printers
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="section-header">
+                    <h2>Dashboard</h2>
+                    <div class="header-actions">
+                        <button id="refreshBtn" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <div class="last-updated">
+                            Last updated: <span id="lastUpdated">Never</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-print"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalPrinters">0</h3>
+                            <p>Total Printers</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="lowSupplies">0</h3>
+                            <p>Low Supplies</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon danger">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="criticalSupplies">0</h3>
+                            <p>Critical Supplies</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="healthySupplies">0</h3>
+                            <p>Healthy Supplies</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Printer Grid -->
+                <div class="printer-grid" id="printerGrid">
+                    <!-- Printers will be dynamically added here -->
+                </div>
+            </section>
+
+            <!-- Printers Section -->
+            <section id="printers" class="content-section">
+                <div class="section-header">
+                    <h2>Printer Management</h2>
+                    <button id="addPrinterBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Printer
+                    </button>
+                </div>
+
+                <div class="printer-list" id="printerList">
+                    <!-- Printer list will be populated here -->
+                </div>
+            </section>
+
+            <!-- Alerts Section -->
+            <section id="alerts" class="content-section">
+                <div class="section-header">
+                    <h2>Alerts</h2>
+                    <button id="clearAlertsBtn" class="btn btn-secondary">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                </div>
+
+                <div class="alerts-container" id="alertsContainer">
+                    <!-- Alerts will be populated here -->
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <div class="section-header">
+                    <h2>Settings</h2>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <h3>Alert Thresholds</h3>
+                        <div class="form-group">
+                            <label for="lowThreshold">Low Supply Threshold (%)</label>
+                            <input type="number" id="lowThreshold" min="0" max="100" value="20">
+                        </div>
+                        <div class="form-group">
+                            <label for="criticalThreshold">Critical Supply Threshold (%)</label>
+                            <input type="number" id="criticalThreshold" min="0" max="100" value="10">
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>Scan Settings</h3>
+                        <div class="form-group">
+                            <label for="scanInterval">Scan Interval (seconds)</label>
+                            <input type="number" id="scanInterval" min="30" max="3600" value="300">
+                        </div>
+                        <div class="form-group">
+                            <label for="timeout">SNMP Timeout (ms)</label>
+                            <input type="number" id="timeout" min="1000" max="10000" value="3000">
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>OID Configuration</h3>
+                        <div class="form-group">
+                            <label for="printerModel">Printer Model</label>
+                            <select id="printerModel">
+                                <option value="generic">Generic</option>
+                                <option value="hp">HP</option>
+                                <option value="canon">Canon</option>
+                                <option value="epson">Epson</option>
+                                <option value="brother">Brother</option>
+                                <option value="lexmark">Lexmark</option>
+                                <option value="xerox">Xerox</option>
+                            </select>
+                        </div>
+                        <div id="oidConfig">
+                            <!-- OID configuration will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button id="saveSettingsBtn" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                    <button id="exportConfigBtn" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Export Config
+                    </button>
+                    <button id="importConfigBtn" class="btn btn-secondary">
+                        <i class="fas fa-upload"></i> Import Config
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="addPrinterModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Printer</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="printerName">Printer Name</label>
+                    <input type="text" id="printerName" placeholder="Enter printer name">
+                </div>
+                <div class="form-group">
+                    <label for="printerIP">IP Address</label>
+                    <input type="text" id="printerIP" placeholder="192.168.1.100">
+                </div>
+                <div class="form-group">
+                    <label for="printerCommunity">SNMP Community</label>
+                    <input type="text" id="printerCommunity" value="public">
+                </div>
+                <div class="form-group">
+                    <label for="printerModelSelect">Printer Model</label>
+                    <select id="printerModelSelect">
+                        <option value="generic">Generic</option>
+                        <option value="hp">HP</option>
+                        <option value="canon">Canon</option>
+                        <option value="epson">Epson</option>
+                        <option value="brother">Brother</option>
+                        <option value="lexmark">Lexmark</option>
+                        <option value="xerox">Xerox</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="savePrinterBtn">Add Printer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/snmpjs/0.1.0/snmpjs.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
