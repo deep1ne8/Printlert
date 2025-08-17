@@ -778,6 +778,126 @@ body {
     to { transform: rotate(360deg); }
 }
 
+/* Production Features */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+    color: #4a5568;
+    margin-bottom: 0.5rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.75rem;
+    transform: scale(1.2);
+}
+
+.checkbox-label:hover {
+    color: #667eea;
+}
+
+/* Performance Metrics */
+.performance-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+}
+
+.metric-label {
+    color: #718096;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Security Features */
+.security-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.security-badge.secure {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+}
+
+.security-badge.warning {
+    background: linear-gradient(135deg, #ed8936, #dd6b20);
+    color: white;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Data Retention Warning */
+.retention-warning {
+    background: linear-gradient(135deg, #fed7d7, #feb2b2);
+    border: 1px solid #fc8181;
+    color: #c53030;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+/* Production Status */
+.production-status {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 1000;
+}
+
+.production-status.production {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+}
+
+.production-status.development {
+    background: linear-gradient(135deg, #ed8936, #dd6b20);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

@@ -167,3 +167,36 @@ out/
 # Test files
 test-results/
 coverage/
+
+# Printlert specific
+printers.json
+settings.json
+alerts.json
+
+# Production files
+data/
+ssl/
+*.pem
+*.key
+*.crt
+
+# Docker
+.dockerignore
+
+# PM2
+.pm2/
+
+# Redis
+dump.rdb
+
+# Database
+*.db
+*.sqlite
+
+# Backup files
+*.tar.gz
+*.zip
+
+# Security
+secrets/
+keys/

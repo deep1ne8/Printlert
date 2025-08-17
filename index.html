@@ -167,6 +167,48 @@
                     </div>
 
                     <div class="settings-card">
+                        <h3>Notification Settings</h3>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableNotifications" checked>
+                                Enable Notifications
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="emailNotifications">
+                                Email Notifications
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="emailRecipients">Email Recipients (comma-separated)</label>
+                            <input type="email" id="emailRecipients" placeholder="admin@company.com, it@company.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="smsNotifications">
+                                SMS Notifications
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="emailRecipients">SMS Recipients (comma-separated)</label>
+                            <input type="text" id="smsRecipients" placeholder="+1234567890, +0987654321">
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h3>Data Management</h3>
+                        <div class="form-group">
+                            <label for="retentionDays">Data Retention (days)</label>
+                            <input type="number" id="retentionDays" min="1" max="365" value="30">
+                        </div>
+                        <div class="form-group">
+                            <label for="maxAlerts">Maximum Alerts to Store</label>
+                            <input type="number" id="maxAlerts" min="100" max="10000" value="1000">
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
                         <h3>OID Configuration</h3>
                         <div class="form-group">
                             <label for="printerModel">Printer Model</label>

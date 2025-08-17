@@ -1,4 +1,4 @@
-// Printlert - Printer Supply Monitor
+// Printlert - Production-Ready Printer Supply Monitor
 // Comprehensive SNMP-based printer monitoring system
 
 class PrintlertApp {
@@ -8,6 +8,9 @@ class PrintlertApp {
         this.settings = this.loadSettings();
         this.scanInterval = null;
         this.oidConfigurations = this.getOIDConfigurations();
+        this.isProduction = window.location.hostname !== 'localhost';
+        this.logger = new Logger();
+        this.security = new SecurityManager();
         
         this.init();
     }
@@ -18,6 +21,7 @@ class PrintlertApp {
         this.updateDashboard();
         this.updateOIDConfig();
         this.startAutoScan();
+        this.logger.log('info', 'Printlert application initialized');
     }
 
     // OID Configurations for different printer manufacturers
@@ -222,26 +226,42 @@ class PrintlertApp {
         }
     }
 
-    // SNMP Functions
+    // Production SNMP Implementation
     async snmpGet(ip, community, oid) {
         try {
-            // Simulate SNMP GET request (in real implementation, you'd use a proper SNMP library)
-            // For demo purposes, we'll simulate responses
-            return await this.simulateSNMPResponse(ip, oid);
+            if (this.isProduction) {
+                return await this.realSNMPGet(ip, community, oid);
+            } else {
+                return await this.simulateSNMPResponse(ip, oid);
+            }
         } catch (error) {
-            console.error(`SNMP GET failed for ${ip}: ${error.message}`);
+            this.logger.log('error', `SNMP GET failed for ${ip}: ${error.message}`);
             throw error;
         }
     }
 
-    async snmpWalk(ip, community, baseOid) {
-        try {
-            // Simulate SNMP WALK request
-            return await this.simulateSNMPWalkResponse(ip, baseOid);
-        } catch (error) {
-            console.error(`SNMP WALK failed for ${ip}: ${error.message}`);
-            throw error;
+    async realSNMPGet(ip, community, oid) {
+        // Production SNMP implementation using WebSocket proxy or server-side API
+        const response = await fetch('/api/snmp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.security.getToken()}`
+            },
+            body: JSON.stringify({
+                ip: ip,
+                community: community,
+                oid: oid,
+                timeout: this.settings.timeout
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`SNMP request failed: ${response.statusText}`);
         }
+
+        const data = await response.json();
+        return data.value;
     }
 
     // Simulate SNMP responses for demo purposes
@@ -267,6 +287,16 @@ class PrintlertApp {
         return responses[oid] || Math.floor(Math.random() * 100);
     }
 
+    async snmpWalk(ip, community, baseOid) {
+        try {
+            // Simulate SNMP WALK request
+            return await this.simulateSNMPWalkResponse(ip, baseOid);
+        } catch (error) {
+            console.error(`SNMP WALK failed for ${ip}: ${error.message}`);
+            throw error;
+        }
+    }
+
     async simulateSNMPWalkResponse(ip, baseOid) {
         await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
         
@@ -285,20 +315,26 @@ class PrintlertApp {
 
     // Printer Management
     async scanPrinter(printer) {
+        const startTime = Date.now();
+        
         try {
+            this.logger.log('info', `Starting scan for printer: ${printer.name} (${printer.ip})`);
+            
             const oids = this.oidConfigurations[printer.model].oids;
             const supplies = [];
 
-            // Get basic printer info
-            const systemName = await this.snmpGet(printer.ip, printer.community, oids.systemName);
-            const systemDesc = await this.snmpGet(printer.ip, printer.community, oids.systemDescription);
-            const status = await this.snmpGet(printer.ip, printer.community, oids.printerStatus);
+            // Parallel SNMP requests for better performance
+            const requests = [
+                this.snmpGet(printer.ip, printer.community, oids.systemName),
+                this.snmpGet(printer.ip, printer.community, oids.systemDescription),
+                this.snmpGet(printer.ip, printer.community, oids.printerStatus),
+                this.snmpGet(printer.ip, printer.community, oids.blackTonerLevel),
+                this.snmpGet(printer.ip, printer.community, oids.blackTonerMaxLevel)
+            ];
 
-            // Get toner levels
-            const blackLevel = await this.snmpGet(printer.ip, printer.community, oids.blackTonerLevel);
-            const blackMax = await this.snmpGet(printer.ip, printer.community, oids.blackTonerMaxLevel);
+            const [systemName, systemDesc, status, blackLevel, blackMax] = await Promise.all(requests);
+            
             const blackPercentage = Math.round((blackLevel / blackMax) * 100);
-
             supplies.push({
                 name: 'Black Toner',
                 level: blackLevel,
@@ -307,45 +343,44 @@ class PrintlertApp {
                 status: this.getSupplyStatus(blackPercentage)
             });
 
-            // Get color toner levels if available
+            // Get color supplies if available
             try {
-                const cyanLevel = await this.snmpGet(printer.ip, printer.community, oids.cyanTonerLevel);
-                const cyanMax = await this.snmpGet(printer.ip, printer.community, oids.cyanTonerMaxLevel);
-                const cyanPercentage = Math.round((cyanLevel / cyanMax) * 100);
+                const colorRequests = [
+                    this.snmpGet(printer.ip, printer.community, oids.cyanTonerLevel),
+                    this.snmpGet(printer.ip, printer.community, oids.cyanTonerMaxLevel),
+                    this.snmpGet(printer.ip, printer.community, oids.magentaTonerLevel),
+                    this.snmpGet(printer.ip, printer.community, oids.magentaTonerMaxLevel),
+                    this.snmpGet(printer.ip, printer.community, oids.yellowTonerLevel),
+                    this.snmpGet(printer.ip, printer.community, oids.yellowTonerMaxLevel)
+                ];
 
-                supplies.push({
-                    name: 'Cyan Toner',
-                    level: cyanLevel,
-                    maxLevel: cyanMax,
-                    percentage: cyanPercentage,
-                    status: this.getSupplyStatus(cyanPercentage)
-                });
+                const [cyanLevel, cyanMax, magentaLevel, magentaMax, yellowLevel, yellowMax] = await Promise.all(colorRequests);
 
-                const magentaLevel = await this.snmpGet(printer.ip, printer.community, oids.magentaTonerLevel);
-                const magentaMax = await this.snmpGet(printer.ip, printer.community, oids.magentaTonerMaxLevel);
-                const magentaPercentage = Math.round((magentaLevel / magentaMax) * 100);
-
-                supplies.push({
-                    name: 'Magenta Toner',
-                    level: magentaLevel,
-                    maxLevel: magentaMax,
-                    percentage: magentaPercentage,
-                    status: this.getSupplyStatus(magentaPercentage)
-                });
-
-                const yellowLevel = await this.snmpGet(printer.ip, printer.community, oids.yellowTonerLevel);
-                const yellowMax = await this.snmpGet(printer.ip, printer.community, oids.yellowTonerMaxLevel);
-                const yellowPercentage = Math.round((yellowLevel / yellowMax) * 100);
-
-                supplies.push({
-                    name: 'Yellow Toner',
-                    level: yellowLevel,
-                    maxLevel: yellowMax,
-                    percentage: yellowPercentage,
-                    status: this.getSupplyStatus(yellowPercentage)
-                });
+                supplies.push(
+                    {
+                        name: 'Cyan Toner',
+                        level: cyanLevel,
+                        maxLevel: cyanMax,
+                        percentage: Math.round((cyanLevel / cyanMax) * 100),
+                        status: this.getSupplyStatus(Math.round((cyanLevel / cyanMax) * 100))
+                    },
+                    {
+                        name: 'Magenta Toner',
+                        level: magentaLevel,
+                        maxLevel: magentaMax,
+                        percentage: Math.round((magentaLevel / magentaMax) * 100),
+                        status: this.getSupplyStatus(Math.round((magentaLevel / magentaMax) * 100))
+                    },
+                    {
+                        name: 'Yellow Toner',
+                        level: yellowLevel,
+                        maxLevel: yellowMax,
+                        percentage: Math.round((yellowLevel / yellowMax) * 100),
+                        status: this.getSupplyStatus(Math.round((yellowLevel / yellowMax) * 100))
+                    }
+                );
             } catch (error) {
-                // Color toner not available, continue with black only
+                this.logger.log('warning', `Color toner not available for ${printer.name}: ${error.message}`);
             }
 
             // Update printer data
@@ -355,9 +390,10 @@ class PrintlertApp {
             printer.supplies = supplies;
             printer.lastScan = new Date().toISOString();
             printer.isOnline = status === 1;
+            printer.scanDuration = Date.now() - startTime;
 
-            // Check for alerts
             this.checkPrinterAlerts(printer);
+            this.logger.log('info', `Scan completed for ${printer.name} in ${printer.scanDuration}ms`);
 
             return printer;
         } catch (error) {
@@ -365,7 +401,9 @@ class PrintlertApp {
             printer.isOnline = false;
             printer.lastScan = new Date().toISOString();
             printer.error = error.message;
+            printer.scanDuration = Date.now() - startTime;
             
+            this.logger.log('error', `Scan failed for ${printer.name}: ${error.message}`);
             this.addAlert('error', `Printer ${printer.name} (${printer.ip}) is offline`, error.message);
             return printer;
         }
@@ -379,16 +417,24 @@ class PrintlertApp {
         scanBtn.disabled = true;
 
         try {
+            this.logger.log('info', 'Starting full printer scan');
+            const startTime = Date.now();
+
             const promises = this.printers.map(printer => this.scanPrinter(printer));
             await Promise.allSettled(promises);
             
+            const scanDuration = Date.now() - startTime;
+            this.logger.log('info', `Full scan completed in ${scanDuration}ms`);
+
             this.savePrinters();
             this.updateDashboard();
             this.updatePrinterList();
             this.updateAlerts();
+            this.cleanupOldData();
             
             this.showNotification('success', 'Printer scan completed successfully');
         } catch (error) {
+            this.logger.log('error', `Full scan failed: ${error.message}`);
             this.showNotification('error', 'Error during printer scan', error.message);
         } finally {
             scanBtn.innerHTML = originalText;
@@ -420,20 +466,91 @@ class PrintlertApp {
         });
     }
 
-    addAlert(type, title, message) {
+    // Production Alert System with Email/SMS
+    async addAlert(type, title, message) {
         const alert = {
             id: Date.now() + Math.random(),
             type: type,
             title: title,
             message: message,
             timestamp: new Date().toISOString(),
-            acknowledged: false
+            acknowledged: false,
+            severity: this.getAlertSeverity(type)
         };
 
         this.alerts.unshift(alert);
         this.saveAlerts();
         this.updateAlertCount();
         this.updateAlerts();
+
+        // Send notifications for critical alerts
+        if (type === 'critical' && this.settings.enableNotifications) {
+            await this.sendNotifications(alert);
+        }
+
+        this.logger.log('info', `Alert created: ${title}`);
+    }
+
+    async sendNotifications(alert) {
+        try {
+            if (this.settings.emailNotifications) {
+                await this.sendEmailAlert(alert);
+            }
+            if (this.settings.smsNotifications) {
+                await this.sendSMSAlert(alert);
+            }
+        } catch (error) {
+            this.logger.log('error', `Failed to send notifications: ${error.message}`);
+        }
+    }
+
+    async sendEmailAlert(alert) {
+        const response = await fetch('/api/notifications/email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.security.getToken()}`
+            },
+            body: JSON.stringify({
+                to: this.settings.emailRecipients,
+                subject: `[Printlert] ${alert.title}`,
+                body: alert.message,
+                severity: alert.severity
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Email notification failed');
+        }
+    }
+
+    async sendSMSAlert(alert) {
+        const response = await fetch('/api/notifications/sms', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.security.getToken()}`
+            },
+            body: JSON.stringify({
+                to: this.settings.smsRecipients,
+                message: `${alert.title}: ${alert.message}`,
+                severity: alert.severity
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('SMS notification failed');
+        }
+    }
+
+    getAlertSeverity(type) {
+        const severities = {
+            'critical': 1,
+            'warning': 2,
+            'error': 1,
+            'info': 3
+        };
+        return severities[type] || 3;
     }
 
     acknowledgeAlert(alertId) {
@@ -698,7 +815,15 @@ class PrintlertApp {
             lowThreshold: parseInt(document.getElementById('lowThreshold').value),
             criticalThreshold: parseInt(document.getElementById('criticalThreshold').value),
             scanInterval: parseInt(document.getElementById('scanInterval').value),
-            timeout: parseInt(document.getElementById('timeout').value)
+            timeout: parseInt(document.getElementById('timeout').value),
+            // Production settings
+            enableNotifications: document.getElementById('enableNotifications').checked,
+            emailNotifications: document.getElementById('emailNotifications').checked,
+            smsNotifications: document.getElementById('smsNotifications').checked,
+            emailRecipients: document.getElementById('emailRecipients').value,
+            smsRecipients: document.getElementById('smsRecipients').value,
+            retentionDays: parseInt(document.getElementById('retentionDays').value),
+            maxAlerts: parseInt(document.getElementById('maxAlerts').value)
         };
 
         localStorage.setItem('printlert_settings', JSON.stringify(this.settings));
@@ -715,13 +840,30 @@ class PrintlertApp {
             document.getElementById('criticalThreshold').value = settings.criticalThreshold || 10;
             document.getElementById('scanInterval').value = settings.scanInterval || 300;
             document.getElementById('timeout').value = settings.timeout || 3000;
+            
+            // Production settings
+            document.getElementById('enableNotifications').checked = settings.enableNotifications || false;
+            document.getElementById('emailNotifications').checked = settings.emailNotifications || false;
+            document.getElementById('smsNotifications').checked = settings.smsNotifications || false;
+            document.getElementById('emailRecipients').value = settings.emailRecipients || '';
+            document.getElementById('smsRecipients').value = settings.smsRecipients || '';
+            document.getElementById('retentionDays').value = settings.retentionDays || 30;
+            document.getElementById('maxAlerts').value = settings.maxAlerts || 1000;
+
             return settings;
         }
         return {
             lowThreshold: 20,
             criticalThreshold: 10,
             scanInterval: 300,
-            timeout: 3000
+            timeout: 3000,
+            enableNotifications: true,
+            emailNotifications: false,
+            smsNotifications: false,
+            emailRecipients: '',
+            smsRecipients: '',
+            retentionDays: 30,
+            maxAlerts: 1000
         };
     }
 
@@ -743,18 +885,23 @@ class PrintlertApp {
         const config = {
             printers: this.printers,
             settings: this.settings,
-            oidConfigurations: this.oidConfigurations
+            oidConfigurations: this.oidConfigurations,
+            alerts: this.alerts,
+            performance: this.getPerformanceMetrics(),
+            exportDate: new Date().toISOString(),
+            version: '1.0.0'
         };
 
         const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'printlert-config.json';
+        a.download = `printlert-config-${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
         
         this.showNotification('success', 'Configuration exported successfully');
+        this.logger.log('info', 'Configuration exported');
     }
 
     importConfig() {
@@ -810,6 +957,40 @@ class PrintlertApp {
         }
     }
 
+    // Data Retention and Cleanup
+    cleanupOldData() {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - this.settings.retentionDays);
+
+        // Clean up old alerts
+        this.alerts = this.alerts.filter(alert => 
+            new Date(alert.timestamp) > cutoffDate
+        );
+
+        // Limit alerts to maxAlerts
+        if (this.alerts.length > this.settings.maxAlerts) {
+            this.alerts = this.alerts.slice(0, this.settings.maxAlerts);
+        }
+
+        this.saveAlerts();
+        this.logger.log('info', `Data cleanup completed. ${this.alerts.length} alerts retained.`);
+    }
+
+    // Performance Monitoring
+    getPerformanceMetrics() {
+        const metrics = {
+            totalPrinters: this.printers.length,
+            onlinePrinters: this.printers.filter(p => p.isOnline).length,
+            averageScanTime: this.printers.reduce((sum, p) => sum + (p.scanDuration || 0), 0) / this.printers.length,
+            totalAlerts: this.alerts.length,
+            unacknowledgedAlerts: this.alerts.filter(a => !a.acknowledged).length,
+            uptime: Date.now() - this.startTime
+        };
+
+        this.logger.log('info', 'Performance metrics collected', metrics);
+        return metrics;
+    }
+
     // Utility Functions
     showNotification(type, title, message = '') {
         const container = document.getElementById('notificationContainer');
@@ -833,12 +1014,92 @@ class PrintlertApp {
     }
 }
 
+// Logger Class for Production Logging
+class Logger {
+    constructor() {
+        this.logs = [];
+        this.maxLogs = 1000;
+    }
+
+    log(level, message, data = null) {
+        const logEntry = {
+            timestamp: new Date().toISOString(),
+            level: level,
+            message: message,
+            data: data
+        };
+
+        this.logs.unshift(logEntry);
+        
+        if (this.logs.length > this.maxLogs) {
+            this.logs = this.logs.slice(0, this.maxLogs);
+        }
+
+        // Console logging for development
+        if (window.location.hostname === 'localhost') {
+            console.log(`[${level.toUpperCase()}] ${message}`, data || '');
+        }
+
+        // Send to server in production
+        if (window.location.hostname !== 'localhost') {
+            this.sendToServer(logEntry);
+        }
+    }
+
+    async sendToServer(logEntry) {
+        try {
+            await fetch('/api/logs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(logEntry)
+            });
+        } catch (error) {
+            console.error('Failed to send log to server:', error);
+        }
+    }
+
+    getLogs(level = null, limit = 100) {
+        let filteredLogs = this.logs;
+        if (level) {
+            filteredLogs = this.logs.filter(log => log.level === level);
+        }
+        return filteredLogs.slice(0, limit);
+    }
+}
+
+// Security Manager for Production Security
+class SecurityManager {
+    constructor() {
+        this.token = localStorage.getItem('printlert_token');
+    }
+
+    getToken() {
+        return this.token;
+    }
+
+    setToken(token) {
+        this.token = token;
+        localStorage.setItem('printlert_token', token);
+    }
+
+    validateToken(token) {
+        // Basic token validation - in production, validate with server
+        return token && token.length > 20;
+    }
+
+    sanitizeInput(input) {
+        return input.replace(/[<>]/g, '');
+    }
+}
+
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new PrintlertApp();
 });
 
-// Add some sample data for demonstration
+// Add sample data for demonstration
 if (!localStorage.getItem('printlert_printers')) {
     const samplePrinters = [
         {
