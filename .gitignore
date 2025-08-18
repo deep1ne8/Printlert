@@ -154,6 +154,7 @@ Thumbs.db
 # Configuration files with sensitive data
 config.json
 secrets.json
+.make_secrets.js
 *.key
 *.pem
 
