@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -43,8 +44,15 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Determine paths for static assets (supports packaged executable and external overrides)
+const isPackaged = !!process.pkg;
+const appRoot = isPackaged ? path.dirname(process.execPath) : __dirname;
+const bundledPublicPath = path.join(__dirname, 'public');
+const externalPublicPath = path.join(appRoot, 'public');
+const staticAssetsPath = fs.existsSync(externalPublicPath) ? externalPublicPath : bundledPublicPath;
+
 // Static file serving
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(staticAssetsPath));
 
 // Winston logger configuration
 const logger = winston.createLogger({
@@ -289,7 +297,7 @@ app.get('/api/metrics', (req, res) => {
 
 // Serve the main application
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(staticAssetsPath, 'index.html'));
 });
 
 // Error handling middleware

@@ -27,7 +27,7 @@ bower_components
 .lock-wscript
 
 # Compiled binary addons
-build/Release
+#build/Release
 
 # Dependency directories
 jspm_packages/
@@ -71,11 +71,9 @@ typings/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -111,7 +109,7 @@ bower_components
 .lock-wscript
 
 # Compiled binary addons
-build/Release
+#build/Release
 
 # Dependency directories
 node_modules/
@@ -200,3 +198,9 @@ dump.rdb
 # Security
 secrets/
 keys/
+
+# Portable build environment
+env/
+
+# Static assets (packaged separately)
+public/
